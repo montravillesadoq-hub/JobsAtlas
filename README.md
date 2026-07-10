@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobsAtlas
 
-## Getting Started
+Plateforme Next.js pour recherche d'emploi internationale, génération de CV/lettres par IA, paiements par reçu bancaire et tableaux de bord utilisateur/admin.
 
-First, run the development server:
+## Démarrage
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variables d'environnement
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Créez un fichier `.env.local` en local et configurez les clés côté serveur uniquement quand elles sont sensibles.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.0-flash
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1-mini
+```
 
-## Learn More
+## Architecture IA
 
-To learn more about Next.js, take a look at the following resources:
+- `src/lib/ai/providers/gemini.ts` : appel Google Gemini pour l'analyse des offres, recommandations, comparaisons, traductions et assistant métier.
+- `src/lib/ai/providers/openai.ts` : appel OpenAI Responses API pour CV, lettres et assistant carrière.
+- `src/lib/ai/cache.ts` : cache en mémoire avec TTL pour réduire coûts et latence.
+- `src/lib/ai/logger.ts` : journalisation des appels IA sans exposer les clés API.
+- `src/lib/ai/job-intelligence.ts` : services métier emploi.
+- `src/lib/ai/document-intelligence.ts` : services CV, lettres et coaching.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Routes IA
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `POST /api/ai/jobs` avec `action`: `analyze`, `recommend`, `compare`, `translate`, `chat`.
+- `POST /api/ai/cv` pour générer ou améliorer un CV importé.
+- `POST /api/ai/letter` pour générer une lettre de motivation.
+- `POST /api/ai/assistant` pour l'assistant carrière ou emploi.
 
-## Deploy on Vercel
+Sans clés API, les routes renvoient des réponses de démonstration structurées afin de garder l'interface testable.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Internationalisation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Langues disponibles : `/fr`, `/en`, `/ar`.
+- Le sélecteur de langue est global dans le header et le menu mobile.
+- La langue est conservée dans `localStorage` et dans le cookie `jobsatlas-locale`.
+- L'arabe active automatiquement `dir="rtl"` sur le document.
+- Les dictionnaires sont dans `src/lib/i18n/dictionaries.ts`.
+- Les modèles d'e-mails localisés sont dans `src/lib/i18n/email-templates.ts`.
+- Les appels Gemini/OpenAI reçoivent la langue active afin de répondre et générer les documents dans la langue choisie.
+
+## Sécurité
+
+- Les clés Gemini et OpenAI restent côté serveur.
+- Les fichiers CV/reçus doivent être stockés dans des buckets Supabase Storage privés en production.
+- Les données personnelles transmises aux modèles doivent être limitées au strict nécessaire.
+- Les erreurs IA sont journalisées avec messages courts et sans contenu sensible.
+
+## Vérification
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run check
+```
+
+## Deploiement GitHub + Vercel
+
+La configuration de deploiement est documentee dans `docs/DEPLOYMENT.md`.
+
+- CI GitHub : `.github/workflows/ci.yml`
+- Configuration Vercel : `vercel.json`
+- Variables d'exemple : `.env.example`
+- Branches recommandees : `main`, `develop`, `feature/*`, `hotfix/*`
+
+Vercel declenche automatiquement un deploiement production a chaque push sur `main` une fois le depot GitHub connecte au projet Vercel.
