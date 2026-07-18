@@ -16,6 +16,10 @@ jobs:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     steps:
       - name: Checkout repository
@@ -34,7 +38,11 @@ jobs:
         run: npm run check
 
       - name: Deploy production to Vercel
-        run: npx vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        if: env.VERCEL_TOKEN != ''
+        run: npx vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+
+      - name: Skip deployment without Vercel token
+        if: env.VERCEL_TOKEN == ''
+        run: |
+          echo "VERCEL_TOKEN is not configured. Add a valid Vercel token in GitHub repository secrets to enable automatic production deployment."
+          exit 0

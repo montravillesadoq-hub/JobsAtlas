@@ -49,6 +49,14 @@ Vercel detecte Next.js automatiquement avec :
 
 Quand le depot GitHub est connecte a Vercel, chaque push vers `main` declenche un deploiement production.
 
+Si l'integration GitHub native de Vercel n'est pas activee, le workflow `.github/workflows/vercel-production.yml` peut deployer avec GitHub Actions. Il faut ajouter ces secrets GitHub :
+
+- `VERCEL_TOKEN` : token personnel cree dans Vercel Account Settings > Tokens.
+- `VERCEL_ORG_ID` : identifiant de l'organisation Vercel.
+- `VERCEL_PROJECT_ID` : identifiant du projet Vercel.
+
+Sans `VERCEL_TOKEN`, le workflow execute les controles mais saute le deploiement.
+
 ## Domaine personnalise
 
 Dans Vercel :
